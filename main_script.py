@@ -4,6 +4,7 @@ import pyautogui
 from math import dist
 import time
 import colorsys
+import cv2.typing
 
 zone_of_interest = (25, 190, 890, 500)
 prev_frame = None
@@ -26,19 +27,19 @@ cv2.namedWindow("Real-Time Screen Capture", cv2.WINDOW_NORMAL)
 cv2.resizeWindow("Real-Time Screen Capture", 900, 500)
 
 
-
 def main():
-    global actual_cars_NS, actual_cars_SN, total_nb_NS, total_nb_SN
+    global actual_cars_NS, actual_cars_SN, total_nb_NS, total_nb_SN, queue
+
     img = pyautogui.screenshot(region=zone_of_interest)
     frame = np.array(img)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # gray_frame = cv2.GaussianBlur(gray_frame, (15, 15), 0)
-    thresh = get_tresh(3, gray_frame, queue)
+    filtered_frame = filter(frame)
 
-    if (thresh is not None):
+    binary_frame, queue = get_tresh(2, filtered_frame, queue, 30, 255, 4)
+
+    if (binary_frame is not None):
         # display rectangle around each moving object
-        contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(binary_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             if cv2.contourArea(contour) < 500:
                 continue
@@ -51,7 +52,10 @@ def main():
             for car in actual_cars_NS:
                 cv2.rectangle(frame, (car[0], car[1]), (car[0] + car[2], car[1] + car[3]), get_color_from_id(car[4]), 2)
                 cv2.putText(frame, str(car[4]), (car[0], car[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 1, get_color_from_id(car[4]), 2)
-
+            # # use the binary frame as a mask
+            # mask = cv2.bitwise_and(frame, frame, mask=binary_frame)
+            # # display the masked image, now with the moving object
+            # cv2.imshow("Real-Time Screen Capture", mask)
             # remove cars that are not in the zone anymore (after 5 seconds)
             for index, car in enumerate(actual_cars_SN):
                 if time.time() - car[5] > 0.2:
@@ -59,39 +63,40 @@ def main():
             for index, car in enumerate(actual_cars_NS):
                 if time.time() - car[5] > 0.2:
                     actual_cars_NS.pop(index)
-    # display the zone_of_interest_SN
     cv2.polylines(frame, np.int32([zone_of_interest_SN]), True, (50, 50, 0), 2)
     cv2.polylines(frame, np.int32([zone_of_interest_NS]), True, (0, 50, 50), 2)
-
     cv2.imshow("Real-Time Screen Capture", frame)
 
 
-def get_tresh(number_of_frame: int, actual_frame, frames_array: list):
-    # frames array is a list of frames where the first frame is the oldest and the last is the newest
-    # update the frames array
+def filter(frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
+    filtered_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    return filtered_frame
+
+
+def get_tresh(number_of_frame: int, actual_frame, frames_array: list, tresh_value: int, max_value: int, dilute_iterations: int) -> cv2.typing.MatLike:
     frames_array.append(actual_frame)
     if len(frames_array) > number_of_frame:
         frames_array.pop(0)
-        # addition the difference between the newest frame and the oldest frames
         frame_deltas = []
         for i in range(len(frames_array) - 1):
             frame_deltas.append(cv2.absdiff(frames_array[i], frames_array[-1]))
-        # addition the difference between the newest frame and the oldest frames
-        threshs = []
+        binary_frames = []
         for frame_delta in frame_deltas:
-            threshs.append(cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1])
+            binary_frames.append(cv2.threshold(frame_delta, tresh_value, max_value, cv2.THRESH_BINARY)[1])
         # keep pixels that have changed in all frames
-        thresh = threshs[0]
+        binary_frame_result = binary_frames[0]
         # using bitwise_and to keep only the pixels that have changed in all frames
-        for i in range(len(threshs) - 1):
-            thresh = cv2.bitwise_and(thresh, threshs[i])
+        for i in range(len(binary_frames) - 1):
+            binary_frame_result = cv2.bitwise_and(binary_frame_result, binary_frames[i])
         # dilate the thresholded image to fill in holes
-        thresh = cv2.dilate(thresh, None, iterations=2)
+        binary_frame_result = cv2.dilate(binary_frame_result, None, iterations=dilute_iterations)
+        # erode the thresholded image to remove noise
+        binary_frame_result = cv2.erode(binary_frame_result, None, iterations=3)
 
-        return thresh
+        return binary_frame_result, frames_array
 
     else:
-        return None
+        return None, frames_array
 
 
 def update_cars(x, y, w, h, distance, zone, total_nb, actual_cars):
