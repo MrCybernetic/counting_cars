@@ -1,51 +1,34 @@
-from __future__ import print_function
-import cv2 as cv
-import argparse
+import cv2
+import numpy as np
+import pyautogui
 
-parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
-                                              OpenCV. You can process both videos and images.')
-parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='vtest.avi')
-parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
-args = parser.parse_args()
+zone_of_interest = (25, 190, 890, 500)
+img = pyautogui.screenshot(region=zone_of_interest)
+frame = np.array(img)
+zone_of_interest_SN = [(560, 100), (871, 350), (630, 350), (475, 100)]
 
-# [create]
-#create Background Subtractor objects
-if args.algo == 'MOG2':
-    backSub = cv.createBackgroundSubtractorMOG2()
-else:
-    backSub = cv.createBackgroundSubtractorKNN()
-# [create]
+# Define the distorted area points
+distorted_points = np.array(zone_of_interest_SN, dtype=np.float32)
 
-# [capture]
-capture = cv.VideoCapture(cv.samples.findFileOrKeep(args.input))
-if not capture.isOpened():
-    print('Unable to open: ' + args.input)
-    exit(0)
-# [capture]
+# Define the desired destination points (rectangular)
+destination_points = np.array([[200, 0], [200, 400], [0, 400], [0, 0]], dtype=np.float32)
+
+# Calculate the perspective transformation matrix
+perspective_matrix = cv2.getPerspectiveTransform(distorted_points, destination_points)
 
 while True:
-    ret, frame = capture.read()
-    if frame is None:
+    img = pyautogui.screenshot(region=zone_of_interest)
+    frame = np.array(img)
+    corrected_image = cv2.warpPerspective(frame, perspective_matrix, (200, 400))
+
+    # Now you can perform any image processing on the corrected area
+    # For example, you can apply filters, object detection, etc.
+
+    # Display the corrected image
+    cv2.imshow("Corrected Image", corrected_image)
+    key = cv2.waitKey(1)
+    if key == 27 or key == ord('q') or cv2.getWindowProperty("Corrected Image", cv2.WND_PROP_VISIBLE) < 1:
         break
 
-    # [apply]
-    #update the background model
-    fgMask = backSub.apply(frame)
-    # [apply]
-
-    # [display_frame_number]
-    #get the frame number and write it on the current frame
-    cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
-    cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
-               cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-    ## [display_frame_number]
-
-    # [show]
-    #show the current frame and the fg masks
-    cv.imshow('Frame', frame)
-    cv.imshow('FG Mask', fgMask)
-    # [show]
-
-    keyboard = cv.waitKey(30)
-    if keyboard == 'q' or keyboard == 27:
-        break
+# Release the window and close
+cv2.destroyAllWindows()
