@@ -44,6 +44,17 @@ class Car:
         colored_area = cv2.warpPerspective(colored_area, perpective_matrix, (zone_of_interest[2], zone_of_interest[3]), flags=cv2.WARP_INVERSE_MAP)
         return colored_area
 
+    def draw_circle(self, frame, perpective_matrix, offs_x, offs_y):
+        x, y = self.x, self.y
+        x, y = cv2.perspectiveTransform(np.array([[[x, y]]], dtype=np.float32), np.linalg.pinv(perpective_matrix))[0][0]
+        cv2.circle(frame, (int(x)+offs_x, int(y)+offs_y), 8, self.color, -1)
+        return frame
+
+    def draw_speed(self, frame, ratio_pixel_per_meters, index):
+        if ((time.time() - self.first_seen) != 0):
+            speed = (dist(self.coordinates_first_seen, (self.x, self.y)) / (time.time() - self.first_seen))*(1/ratio_pixel_per_meters)*3.6
+            cv2.putText(frame, str(int(speed)) + " km/h", (50, 320+20*index), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, 2)
+
 
 def get_color_from_id(id):
     hue = int(id * 255 / 10)
