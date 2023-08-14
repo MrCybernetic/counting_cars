@@ -2,7 +2,7 @@ import dataclasses
 import numpy as np
 import cv2
 import cv2.typing
-from utils import update_cars
+from cars import update_cars
 
 
 @dataclasses.dataclass
