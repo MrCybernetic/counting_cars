@@ -18,7 +18,6 @@ The Traffic Monitoring System is a Python-based project that uses computer visio
 
 - Python 3.x
 - OpenCV (cv2)
-- VidGear
 - m3u8
 - Requests
 
@@ -65,10 +64,10 @@ Contributions are welcome! If you find any issues or have improvements to sugges
 
 ## Acknowledgements
 - [OpenCV](https://opencv.org/)
-- [VidGear](https://abhitronix.github.io/vidgear/v0.3.1-stable/)
 - [m3u8](https://pypi.org/project/m3u8/)
 - [Requests](https://pypi.org/project/requests/)
 - [Periph Nord Lyon Live](https://www.youtube.com/watch?v=z4vQEMiD3VI)
+- [yt_dlp](https://github.com/yt-dlp/yt-dlp)
 
 ## License
 MIT License : [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT) 

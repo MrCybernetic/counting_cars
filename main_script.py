@@ -1,10 +1,10 @@
 import cv2
-from vidgear.gears import CamGear
 from m3u8 import loads
 import requests
 from utils import debugger
 from stream_mgmt import VideoStreamWidget
 from zones_of_interest import Zone, handle_cars
+import yt_dlp
 
 
 def main(zone_configs: list, video_stream_widget: VideoStreamWidget, debug: bool = False):
@@ -30,15 +30,14 @@ def main(zone_configs: list, video_stream_widget: VideoStreamWidget, debug: bool
         if key == 27 or key == ord('q') or cv2.getWindowProperty("Real-Time Screen Capture", cv2.WND_PROP_VISIBLE) < 1:
             video_stream_widget.capture.release()
             break
-
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
     livestream_url = "https://www.youtube.com/watch?v=z4vQEMiD3VI"
-    stream = CamGear(source=livestream_url, stream_mode=True, logging=True).start()
-    video_metadata = stream.ytv_metadata
-    stream.stop()
+
+    video_metadata = yt_dlp.YoutubeDL().extract_info(livestream_url, download=False)
+    
     manifest_url = video_metadata["manifest_url"]
     response = requests.get(manifest_url)
     manifest_content = response.text

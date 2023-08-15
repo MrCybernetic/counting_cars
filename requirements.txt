@@ -1,4 +1,3 @@
 opencv-python
 yt_dlp
 m3u8
-vidgear
