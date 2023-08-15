@@ -27,8 +27,8 @@ The Traffic Monitoring System is a Python-based project that uses computer visio
 1. Clone the repository:
 
 ```bash
-   git clone https://github.com/your-username/traffic-monitoring-system.git
-   cd traffic-monitoring-system
+   git clone https://github.com/MrCybernetic/counting_cars.git
+   cd counting_cars
 ```
 2. Install the required dependencies:
 
