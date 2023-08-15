@@ -1,5 +1,9 @@
 import cv2
 import numpy as np
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from zones_of_interest import Zone
 
 
 def filter(frame: cv2.typing.MatLike) -> cv2.typing.MatLike:
@@ -25,17 +29,17 @@ def get_moving_pixels(number_of_frame: int, actual_frame, frames_array: list, tr
         return None, frames_array
 
 
-def debugger(zone, warped_image, binary_frame, actual_cars, frame):
-    cv2.polylines(frame, np.int32([zone.zone_of_interest]), True, (50, 50, 0), 2)
-    white_canvas = np.zeros((200, 100), np.uint8)
+def debugger(zone: "Zone", warped_image: np.array, binary_frame: cv2.typing.MatLike, actual_cars: list, frame: cv2.typing.MatLike) -> None:
+    black_image = np.zeros_like(warped_image)
     for car in actual_cars:
         colored_area = car.get_colored_area(frame, zone.perspective_matrix)
-        frame = cv2.addWeighted(frame, 1, colored_area, 0.5, 0)
-        cv2.circle(white_canvas, (int(car.x), int(car.y)), 20, (255, 0, 0), 1)
-    ok = cv2.addWeighted(warped_image, 1, white_canvas, 1, 0)
-    if (binary_frame is not None):
-        ok = cv2.addWeighted(ok, 1, binary_frame, 0.2, 0)
-    cv2.imshow("Warped_SN", warped_image)
-    cv2.resizeWindow("Warped_SN", 200, 250)
-    cv2.imshow("debug", ok)
-    cv2.resizeWindow("debug", warped_image.shape[1]*2, warped_image.shape[0]*2)
+        frame[colored_area != 0] = colored_area[colored_area != 0]
+    # in warped image, display the min y and max y lines
+    cv2.line(black_image, (0, int(zone.min_y)), (black_image.shape[1], int(zone.min_y)), 255, 2)
+    cv2.line(black_image, (0, int(zone.max_y)), (black_image.shape[1], int(zone.max_y)), 255, 2)
+    # using perpective inverse, display the black_image on the original image
+    black_image = cv2.warpPerspective(black_image, zone.perspective_matrix, (frame.shape[1], frame.shape[0]), flags=cv2.WARP_INVERSE_MAP)
+    black_image_gbr = cv2.cvtColor(black_image, cv2.COLOR_GRAY2BGR)
+    cv2.addWeighted(frame, 1, black_image_gbr, 1, 0, frame)
+
+    cv2.polylines(frame, np.int32([zone.zone_of_interest]), True, (150, 0, 0), 1)

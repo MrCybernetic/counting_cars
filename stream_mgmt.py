@@ -1,33 +1,29 @@
-import time
-from threading import Thread
 import cv2
+from multiprocessing import Process, Queue
+import time
 
 
 class VideoStreamWidget(object):
-    def __init__(self, src):
-        self.capture = cv2.VideoCapture(src)
-        # Start the thread to read frames from the video stream
-        self.frame = None
-        if self.capture.isOpened():
-            self.thread = Thread(target=self.update, args=())
-            self.thread.daemon = True
-            self.thread.start()
+    def __init__(self, src, buffer_size=10):
+        self.frame_queue = Queue(maxsize=buffer_size)
+        self.process = Process(target=self.update, args=(src, self.frame_queue))
+        self.process.daemon = True
+        self.process.start()
 
-    def update(self):
-        # Read the next frame from the stream in a different thread
+    def update(self, src, frame_queue):
+        capture = cv2.VideoCapture(src)
+        fps = capture.get(cv2.CAP_PROP_FPS)
         while True:
-            (self.status, self.frame) = self.capture.read()
-            time.sleep(1/30)
-
-    def show_frame(self):
-        # Display frames in main program
-        cv2.imshow('frame', self.frame)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            self.capture.release()
-            cv2.destroyAllWindows()
-            exit(1)
+            (status, frame) = capture.read()
+            if not status:
+                break
+            if frame_queue.full():
+                frame_queue.get()
+            frame_queue.put(frame)
+            time.sleep(1/fps)
+        capture.release()
 
     def get_frame(self):
-        # Display frames in main program
-        return self.frame
+        if self.frame_queue.empty():
+            return None
+        return self.frame_queue.get()

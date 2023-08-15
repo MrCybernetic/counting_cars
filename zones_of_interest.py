@@ -32,6 +32,10 @@ class Zone:
         x, y, w, h = cv2.boundingRect(contour)
         min_zone_y = min(self.zone_of_interest, key=lambda x: x[1])[1]
         max_zone_y = max(self.zone_of_interest, key=lambda x: x[1])[1]
+        real_coord = cv2.perspectiveTransform(np.array([[[0, min_zone_y]], [[0, max_zone_y]]], dtype=np.float32),
+                                              self.perspective_matrix)
+        min_zone_y = real_coord[0][0][1]
+        max_zone_y = real_coord[1][0][1]
         self.min_y = 0.25*(max_zone_y-min_zone_y)
         self.max_y = 0.75*(max_zone_y-min_zone_y)
         self.actual_cars, self.last_id, self.cars_counted = update_cars(
@@ -42,7 +46,7 @@ class Zone:
 def handle_cars(zone: Zone, queue: list, frame_src, frame_dst):
     filtered_frame = filter(frame_src)
     warped_image = zone.get_warped_image(filtered_frame, zone.warped_image_width, zone.warped_image_height)
-    binary_frame, queue = get_moving_pixels(3, warped_image, queue, 40, 255, 5, 3)
+    binary_frame, queue = get_moving_pixels(3, warped_image, queue, 40, 255, 6, 3)
     if (binary_frame is not None):
         contours, _ = cv2.findContours(binary_frame.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
