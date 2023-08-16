@@ -15,6 +15,7 @@ class Zone:
     ratio_pixel_per_meters: float
     offs_x_for_circle: int
     offs_y_for_circle: int
+    num: int
     actual_cars: list = dataclasses.field(default_factory=list)
     cars_counted: set = dataclasses.field(default_factory=set)
     last_id: int = 0

@@ -43,3 +43,5 @@ def debugger(zone: "Zone", warped_image: np.array, binary_frame: cv2.typing.MatL
     cv2.addWeighted(frame, 1, black_image_gbr, 1, 0, frame)
 
     cv2.polylines(frame, np.int32([zone.zone_of_interest]), True, (150, 0, 0), 1)
+    cv2.putText(frame, str(zone.num), (int(zone.zone_of_interest[0][0]), int(zone.zone_of_interest[0][1])),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
