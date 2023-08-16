@@ -1,10 +1,11 @@
 # Traffic Monitoring System
 
-![image](https://github.com/MrCybernetic/counting_cars/assets/3818606/49f78e2d-0017-4dac-98a2-88ba2cef9aea) 
+![image](https://github.com/MrCybernetic/counting_cars/assets/3818606/4a529d94-3d28-43ac-9b61-6a61528c3830)
+
 
 ## Overview
 
-The Traffic Monitoring System is a Python-based project that uses computer vision techniques to monitor traffic and detect vehicles in real-time. The system is designed to work with live video streams and analyze vehicle movements within specific zones of interest.
+The Traffic Monitoring System is a Python-based project that uses computer vision techniques to monitor traffic and detect vehicles in real-time. The system is designed to work with live video streams and analyze vehicle movements within specific zones of interest and displaying them on a map.
 
 ## Features
 
@@ -58,6 +59,7 @@ Setup the zones in the main script:
 - **cars.py:** Implements vehicle tracking and speed estimation.
 - **utils.py:** Contains utility functions used throughout the project.
 - **stream_mgmt.py:** Handles video streaming and frame retrieval.
+- **maps.py:** To display cars on the map.
 
 ## Contributing
 Contributions are welcome! If you find any issues or have improvements to suggest, please create a pull request.
@@ -68,6 +70,7 @@ Contributions are welcome! If you find any issues or have improvements to sugges
 - [Requests](https://pypi.org/project/requests/)
 - [Periph Nord Lyon Live](https://www.youtube.com/watch?v=z4vQEMiD3VI)
 - [yt_dlp](https://github.com/yt-dlp/yt-dlp)
+- [Open Street Map](https://www.openstreetmap.org/)
 
 ## License
 MIT License : [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT) 
